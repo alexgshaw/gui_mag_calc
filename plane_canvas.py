@@ -6,10 +6,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-class PlotCanvas(FigureCanvas):
+class PlaneCanvas(FigureCanvas):
     def __init__(self, parent=None, width=5, height=5, dpi=200):
         fig = plt.figure(1, figsize=(width,height), dpi=dpi)
-        super(PlotCanvas, self).__init__(fig)
+        super(PlaneCanvas, self).__init__(fig)
         self.calc = parent.calc
         self.setParent(parent)
 

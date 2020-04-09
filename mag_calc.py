@@ -62,47 +62,9 @@ class MagCalc:
         self.locations = locations
 
     def calculate_field(self,
-                        location,
+                        locations=None,
                         return_vector=True,
-                        mask=None):
-        """ Calculates the magnetic field at the specified location.
-
-        Parameters:
-            location (ndarray): A 1D numpy array of length 3 specifying where to
-                calculate the magnetic field.
-            return_vector (boolean): Optional, default is True. See below for
-                details.
-            mask (ndarray): Optional, default is None. Should be an ndarray
-                that is the same size as self.atoms and self.spins.
-
-        Returns:
-            (float or ndarray): The magnetic field at the given location. If
-                return_vector is False it is a float of the magnitude. If
-                return_vector is True, it is a 1D numpy array with 3 values.
-
-        """
-        if mask is not None:
-            atoms = self.atoms[mask]
-            spins = self.spins[mask]
-        else:
-            atoms = self.atoms
-            spins = self.spins
-
-        r = (location - atoms) * 1e-10
-        m = spins.copy()
-
-        m_dot_r = (r*m).sum(axis=1)
-        r_mag = np.linalg.norm(r, axis=1)
-
-        Bvals = 3.0 * r.T * m_dot_r / r_mag**5 - m.T / r_mag**3
-        Btot = Bvals.sum(axis=1) * 1e-7 # (mu_0 / (4 * pi))
-
-        return Btot if return_vector is True else np.linalg.norm(Btot)
-
-    def calculate_fields(self,
-                         locations=None,
-                         return_vector=True,
-                         mask_radius=None):
+                        mask_radius=None):
         """ Calculates the magnetic field at the specified locations.
 
         Parameters:
@@ -144,10 +106,10 @@ class MagCalc:
         else:
             mask = None
 
-        return np.array([self.calculate_field(location,
-                                              return_vector,
-                                              mask)
-                                              for location in locations])
+        return np.array([self.get_field(location,
+                                        return_vector,
+                                        mask)
+                                        for location in locations])
 
 
     def find_field(self,
@@ -172,9 +134,9 @@ class MagCalc:
         """
         initial = np.random.rand(3) * search_range + center_point - search_range / 2
 
-        f = lambda x, y, z: (self.calculate_field(location=x,
-                                                  return_vector=False,
-                                                  mask=y) - z)
+        f = lambda x, y, z: (self.get_field(location=x,
+                                            return_vector=False,
+                                            mask=y) - z)
 
         minimum = least_squares(f, initial, args=(mask, field))
 
@@ -250,13 +212,51 @@ class MagCalc:
         # Multiply locations by Q to get the points into the standard basis.
         locations = Q.dot(locations).T + center_point
 
-        fields = self.calculate_fields(locations=locations,
-                                       return_vector=return_vector,
-                                       mask_radius=mask_radius)
+        fields = self.calculate_field(locations=locations,
+                                      return_vector=return_vector,
+                                      mask_radius=mask_radius)
 
         return fields.reshape(a.size, b.size)
 
     # Helper functions and magic methods
+    def get_field(self,
+                  location,
+                  return_vector=True,
+                  mask=None):
+        """ Calculates the magnetic field at the specified location.
+
+        Parameters:
+            location (ndarray): A 1D numpy array of length 3 specifying where to
+                calculate the magnetic field.
+            return_vector (boolean): Optional, default is True. See below for
+                details.
+            mask (ndarray): Optional, default is None. Should be an ndarray
+                that is the same size as self.atoms and self.spins.
+
+        Returns:
+            (float or ndarray): The magnetic field at the given location. If
+                return_vector is False it is a float of the magnitude. If
+                return_vector is True, it is a 1D numpy array with 3 values.
+
+        """
+        if mask is not None:
+            atoms = self.atoms[mask]
+            spins = self.spins[mask]
+        else:
+            atoms = self.atoms
+            spins = self.spins
+
+        r = (location - atoms) * 1e-10
+        m = spins.copy()
+
+        m_dot_r = (r*m).sum(axis=1)
+        r_mag = np.linalg.norm(r, axis=1)
+
+        Bvals = 3.0 * r.T * m_dot_r / r_mag**5 - m.T / r_mag**3
+        Btot = Bvals.sum(axis=1) * 1e-7 # (mu_0 / (4 * pi))
+
+        return Btot if return_vector is True else np.linalg.norm(Btot)
+
     def make_mask(self,
                   locations,
                   mask_radius):

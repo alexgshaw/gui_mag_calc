@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
-from plot_canvas import PlotCanvas
+from plane_canvas import PlaneCanvas
 import numpy as np
 
 INIT_RES = 20
@@ -41,7 +41,7 @@ class PlotLayout(QVBoxLayout):
         self.res_slider = QSlider(Qt.Horizontal)
         self.sl_slider = QSlider(Qt.Horizontal)
 
-        self.plot = PlotCanvas(self.parent)
+        self.plot = PlaneCanvas(self.parent)
         self.toolbar = NavigationToolbar(self.plot, self.parent)
 
         center_xyz_layout = QHBoxLayout()
